@@ -3,7 +3,7 @@ name: Tarea Automatizada de ejecución de pruebas
 env:
   PHP_VERSION: '8.2'                              # Versión de PHP
   SONAR_ORG: 'bczlopezcatunta'                    # Nombre de la organización de sonar cloud
-  SONAR_PROJECT: 'bczlopezcatunta_bancaapp'       # Key ID del proyecto de sonar
+  SONAR_PROJECT: 'bczlopezcatunta_pruebatest02'       # Key ID del proyecto de sonar
 
 on:
   push:
