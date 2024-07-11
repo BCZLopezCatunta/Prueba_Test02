@@ -28,7 +28,13 @@ jobs:
         run: composer install --prefer-dist --no-progress --no-suggest
 
       - name: Actualizar configuración de PHPUnit
-        run: vendor/bin/phpunit --migrate-configuration
+        run: |
+          if vendor/bin/phpunit --migrate-configuration; then
+            echo "PHPUnit configuration migrated successfully."
+          else
+            echo "Failed to migrate PHPUnit configuration."
+            exit 1
+          fi
 
       - name: Ejecutar pruebas de PHPUnit
         run: vendor/bin/phpunit --coverage-clover coverage.xml
