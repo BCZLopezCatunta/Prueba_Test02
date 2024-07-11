@@ -3,7 +3,7 @@ name: Tarea Automatizada de ejecución de pruebas
 env:
   PHP_VERSION: '8.2'                              # Versión de PHP
   SONAR_ORG: 'bczlopezcatunta'                    # Nombre de la organización de sonar cloud
-  SONAR_PROJECT: 'bczlopezcatunta_pruebatest02'       # Key ID del proyecto de sonar
+  SONAR_PROJECT: 'bczlopezcatunta_pruebatest02'   # Key ID del proyecto de sonar
 
 on:
   push:
@@ -22,10 +22,13 @@ jobs:
         with:
           php-version: ${{ env.PHP_VERSION }}
           extensions: mbstring, xml, ctype, iconv, intl
-          coverage: none
+          coverage: xdebug  # Habilitar cobertura
 
       - name: Instalar dependencias de Composer
         run: composer install --prefer-dist --no-progress --no-suggest
+
+      - name: Actualizar configuración de PHPUnit
+        run: vendor/bin/phpunit --migrate-configuration
 
       - name: Ejecutar pruebas de PHPUnit
         run: vendor/bin/phpunit --coverage-clover coverage.xml
@@ -40,7 +43,13 @@ jobs:
 
       - name: Ejecutar escaneo SonarCloud
         run: |
-          sonar-scanner -Dsonar.projectKey=${{ env.SONAR_PROJECT }} -Dsonar.organization=${{ env.SONAR_ORG }} -Dsonar.sources=./src -Dsonar.php.tests.reportPath=./tests -Dsonar.php.coverage.reportPaths=./coverage.xml -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+          sonar-scanner -Dsonar.projectKey=${{ env.SONAR_PROJECT }} \
+                        -Dsonar.organization=${{ env.SONAR_ORG }} \
+                        -Dsonar.sources=./src \
+                        -Dsonar.php.tests.reportPath=./tests \
+                        -Dsonar.php.coverage.reportPaths=./coverage.xml \
+                        -Dsonar.host.url=https://sonarcloud.io \
+                        -Dsonar.login=${{ secrets.SONAR_TOKEN }}
 
       - name: Subir reporte de cobertura
         uses: actions/upload-artifact@v3
