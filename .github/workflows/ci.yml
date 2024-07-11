@@ -1,0 +1,56 @@
+name: Tarea Automatizada de ejecución de pruebas
+
+env:
+  PHP_VERSION: '8.2'                              # Versión de PHP
+  SONAR_ORG: 'bczlopezcatunta'                    # Nombre de la organización de sonar cloud
+  SONAR_PROJECT: 'bczlopezcatunta_bancaapp'       # Key ID del proyecto de sonar
+
+on:
+  push:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build and Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Configurando la versión de PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          extensions: mbstring, xml, ctype, iconv, intl
+          coverage: none
+
+      - name: Instalar dependencias de Composer
+        run: composer install --prefer-dist --no-progress --no-suggest
+
+      - name: Ejecutar pruebas de PHPUnit
+        run: vendor/bin/phpunit --coverage-clover coverage.xml
+
+      - name: Ejecutar pruebas de Behat
+        run: vendor/bin/behat
+
+      - name: Instalar SonarScanner para PHP
+        run: |
+          composer global require sonarsource/sonar-scanner-cli
+          echo "$HOME/.composer/vendor/bin" >> $GITHUB_PATH
+
+      - name: Ejecutar escaneo SonarCloud
+        run: |
+          sonar-scanner -Dsonar.projectKey=${{ env.SONAR_PROJECT }} -Dsonar.organization=${{ env.SONAR_ORG }} -Dsonar.sources=./src -Dsonar.php.tests.reportPath=./tests -Dsonar.php.coverage.reportPaths=./coverage.xml -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=${{ secrets.SONAR_TOKEN }}
+
+      - name: Subir reporte de cobertura
+        uses: actions/upload-artifact@v3
+        with:
+          name: PHP Coverage Report
+          path: coverage.xml
+
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: php_reports
+          publish_dir: ./coveragereport/
